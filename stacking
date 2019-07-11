@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[21]:
+
+#import library
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score,cross_val_predict
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import RidgeClassifier
+from sklearn import tree
+from sklearn.linear_model import LogisticRegression
+# reading Caravan.csv and splitting into training and testing set
+
+RANDOM_SEED=100
+df=pd.read_csv("d:/caravan.csv")
+x=df.drop("Purchase",axis=1)
+y=LabelEncoder().fit_transform(df["Purchase"])
+x_tr,x_test,y_tr,y_test=train_test_split(x,y,test_size=.4)
+
+#create model 1 applying a decision tree classifier and create prediction for training and testing dataset
+
+model1=tree.DecisionTreeClassifier(criterion="entropy", random_state=RANDOM_SEED)
+model1.fit(x_tr,y_tr)
+
+#Apply cross k fold vadiation and calculate prediction
+
+p_test_model1=cross_val_predict(model1,x_test,y_test,cv=5)
+p_tr_model1=cross_val_predict(model1,x_tr,y_tr,cv=5)
+table_cross=confusion_matrix(y_test,p_test_model1)
+print(table_cross)
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test,p_test_model1)
+accuracy
+
+
+# create model 2 applying K neighbours classifier 
+
+
+model2 = KNeighborsClassifier(n_neighbors=2)
+model2.fit(x_tr,y_tr)
+#scores=cross_val_score(model2,x,y,cv=5,scoring='f1_micro')
+
+#prediction
+p_test_model2=cross_val_predict(model2,x_test,y_test,cv=5)
+p_tr_model2=cross_val_predict(model2,x_tr,y_tr,cv=5)
+table_cross=confusion_matrix(y_test,p_test_model2)
+print(table_cross)
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test,p_test_model2)
+accuracy
+
+
+# create model 3 applying ridge classifier 
+
+model3 = RidgeClassifier(alpha=0.1, random_state=RANDOM_SEED)
+model3.fit(x_tr,y_tr)
+#scores=cross_val_score(model3,x,y,cv=5,scoring='f1_micro')
+
+#prediction
+p_test_model3=cross_val_predict(model3,x_test,y_test,cv=5)
+p_tr_model3=cross_val_predict(model3,x_tr,y_tr,cv=5)
+table_cross=confusion_matrix(y_test,p_test_model3)
+print(table_cross)
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test,p_test_model3)
+accuracy
+
+
+# create model 4 applying Random Forest
+
+model4= RandomForestClassifier(n_estimators=10, random_state=RANDOM_SEED)
+
+model4.fit(x_tr,y_tr)
+scores=cross_val_score(model3,x,y,cv=5,scoring='f1_micro')
+
+#prediction
+p_test_model4=cross_val_predict(model4,x_test,y_test,cv=5)
+p_tr_model4=cross_val_predict(model4,x_tr,y_tr,cv=5)
+table_cross=confusion_matrix(y_test,p_test_model4)
+print(table_cross)
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test,p_test_model4)
+accuracy
+
+#blending process
+# Combine predictions on the training dataset to produce a training data frame
+# Combine predictions on the testing dataset to produce a testing data frame
+
+tr_new_df=pd.DataFrame({"model1_tr":p_tr_model1,"model2_tr":p_tr_model2,"model3_tr":p_tr_model3,"model4_tr":p_tr_model4})
+tr_new_df
+predictor=tr_new_df
+output=pd.DataFrame({"target":y_tr})
+test_new_df=pd.DataFrame({"model1_test":p_test_model1,"model2_test":p_test_model2,"model3_test":p_test_model3,"model4_test":p_test_model4})
+#apply logistic regression to produce the final predictions
+
+final_model = LogisticRegression()
+final_model.fit(predictor,output)
+final_predict_test=final_model.predict(test_new_df)
+final_predict_tr=final_model.predict(tr_new_df)
+
+
+# In[26]:
+
+
+final_predict
+test_new_df
+
+
+# In[29]:
+
+
+table_cross=confusion_matrix(output,final_predict_tr)
+print(table_cross)
+
+
+# In[31]:
+
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(output,final_predict_tr)
+accuracy
+
+# In[37]:
+
+from sklearn.metrics import accuracy_score
+accuracy = accuracy_score(y_test,final_predict_test)
+accuracy
+
+# In[38]:
+
+
+tr_new_df
+
+
+# In[ ]:
+
+
+
+
